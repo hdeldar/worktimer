@@ -67,7 +67,7 @@
     <ClCompile Include="GeneratedFiles\Release\moc_window.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
-    <ClCompile Include="GeneratedFiles\qrc_systray.cpp">
+    <ClCompile Include="GeneratedFiles\qrc_worktimer.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -86,13 +86,13 @@
     <None Include="images\heart.png">
       <Filter>Resource Files</Filter>
     </None>
-    <CustomBuild Include="systray.qrc">
+    <CustomBuild Include="worktimer.qrc">
       <Filter>Resource Files</Filter>
     </CustomBuild>
     <None Include="images\trash.png">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="Installer\ConnectToInternet.nsi">
+    <None Include="Installer\worktimer.nsi">
       <Filter>installer</Filter>
     </None>
   </ItemGroup>
@@ -122,7 +122,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="ConnectToInternet.rc">
+    <ResourceCompile Include="worktimer.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>

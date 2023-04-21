@@ -1,10 +1,10 @@
 HEADERS       = window.h
 SOURCES       = main.cpp \
                 window.cpp
-RESOURCES     = systray.qrc
+RESOURCES     = worktimer.qrc
 
 QT += widgets
 
 # install
-#target.path = $$[QT_INSTALL_EXAMPLES]/widgets/desktop/systray
+#target.path = $$[QT_INSTALL_EXAMPLES]/widgets/desktop/worktimer
 #INSTALLS += target
