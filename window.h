@@ -4,18 +4,8 @@
 #include <QTime>
 #include <QDialog>
 #include <memory>
-
-class QAction;
-class QCheckBox;
-class QComboBox;
-class QGroupBox;
-class QLabel;
-class QLineEdit;
-class QMenu;
-class QPushButton;
-class QSpinBox;
-class QTextEdit;
-class QTimer;
+#include <QElapsedTimer>
+#include <QFile>
 #include "ui_window.h"
 //namespace Ui { class Window; };
 
@@ -25,7 +15,7 @@ class Window : public QDialog
 
 public:
     Window(QWidget *parent = nullptr);
-
+	~Window();
     void setVisible(bool visible);
 
 protected:
@@ -35,55 +25,40 @@ private slots:
     void setIcon(int index);
     void iconActivated(QSystemTrayIcon::ActivationReason reason);
     void showMessage();
-    void messageClicked();
-    void checkConnectionState();
-    void on_connectionLineEdit_textEdited(const QString &text);
-    void on_userLineEdit_textEdited(const QString &text);
-    void on_passwordLineEdit_textEdited(const QString &text);
+	void on_addTask_clicked(bool checked);
+	void on_removeTask_clicked(bool checked);
+	void on_okBtn_clicked(bool checked);
+	void on_pathBtn_clicked(bool checked);
+	void on_taskListWidget_currentRowChanged(int currentRow);
 private:
-    void createIconGroupBox();
-    void createMessageGroupBox();
     void createActions();
     void createTrayIcon();
+	QString getCurrentTask();
+	void working();
+	void resting();
+	void writeLog(QString task, QString start, QString stop, QString duration);
 
-	 int getConnectionState();
-	 void connectToInternet();
-	 void disconnectFromInternet();
+private:
+    QAction *m_minimizeAction;
+    QAction *m_maximizeAction;
+    QAction *m_restoreAction;
+    QAction *m_quitAction;
 
-    QGroupBox *iconGroupBox;
-    QLabel *iconLabel;
-    QComboBox *iconComboBox;
-    QCheckBox *showIconCheckBox;
-
-    QGroupBox *messageGroupBox;
-    QLabel *typeLabel;
-    QLabel *durationLabel;
-    QLabel *durationWarningLabel;
-    QLabel *titleLabel;
-    QLabel *bodyLabel;
-    QComboBox *typeComboBox;
-    QSpinBox *durationSpinBox;
-    QLineEdit *titleEdit;
-    QTextEdit *bodyEdit;
-    QPushButton *showMessageButton;
-
-    QAction *minimizeAction;
-    QAction *maximizeAction;
-    QAction *restoreAction;
-    QAction *quitAction;
-
-    QSystemTrayIcon *trayIcon;
-    QMenu *trayIconMenu;
-    QTimer *timer; 
-    QTime messageTime;
-    bool blinkConnection = true;
+    QSystemTrayIcon *m_trayIcon;
+    QMenu *m_trayIconMenu;
+	QElapsedTimer m_elapsedTime;
     std::unique_ptr<Ui::Window> m_ui;
-    QList<QIcon> iconList;
-    int currentState = 0;
-
+    QList<QIcon> m_iconList;
+	bool m_currentState = 0;
     //---
     QString m_connectionName;
     QString m_userName;
     QString m_password;
+	QString m_currentTask;
+	QString m_startTime;
+	//--
+	QString m_logFileDir;
+	QString m_logFileName;
+	QFile* m_logFile = nullptr;
 };
 

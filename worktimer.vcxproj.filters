@@ -70,6 +70,15 @@
     <ClCompile Include="GeneratedFiles\qrc_worktimer.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_Util.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_Util.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="Util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="window.h">
@@ -78,41 +87,32 @@
     <CustomBuild Include="window.ui">
       <Filter>Form Files</Filter>
     </CustomBuild>
+    <CustomBuild Include="Util.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <None Include="images\bad.png">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="images\heart.png">
-      <Filter>Resource Files</Filter>
-    </None>
     <CustomBuild Include="worktimer.qrc">
       <Filter>Resource Files</Filter>
     </CustomBuild>
-    <None Include="images\trash.png">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="Installer\worktimer.nsi">
       <Filter>installer</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="images\connect.png">
+    <Image Include="images\relax-48.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="images\disconnect.png">
+    <Image Include="images\relax-96.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="images\connect1.png">
+    <Image Include="images\working-48.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="images\disconnect1.png">
+    <Image Include="images\working-96.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="images\connect2.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="images\connect1.ico">
+    <Image Include="images\working.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

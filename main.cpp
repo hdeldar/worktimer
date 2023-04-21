@@ -1,6 +1,9 @@
 #include <QApplication>
 #include <QMessageBox>
 #include "window.h"
+#include <QDebug>
+#include <QScreen>
+#include <QDesktopWidget>
 
 int main(int argc, char *argv[])
 {
@@ -17,8 +20,10 @@ int main(int argc, char *argv[])
         return 1;
     }
     QApplication::setQuitOnLastWindowClosed(false);
-
+	QLocale::setDefault(QLocale::English);
     Window window;
+	QRect screenrect = QApplication::primaryScreen()->availableGeometry();
+	window.move(screenrect.right() - window.width(), screenrect.bottom() - window.height() - 40);
     window.show();
     return app.exec();
 }
