@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/bad.png</file>
+        <file>images/heart.png</file>
+        <file>images/trash.png</file>
+        <file>images/connect.png</file>
+        <file>images/disconnect.png</file>
+        <file>images/connect1.png</file>
+        <file>images/disconnect1.png</file>
+        <file>images/connect2.png</file>
+    </qresource>
+</RCC>
