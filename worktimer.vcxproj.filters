@@ -95,9 +95,6 @@
     <CustomBuild Include="worktimer.qrc">
       <Filter>Resource Files</Filter>
     </CustomBuild>
-    <None Include="Installer\worktimer.nsi">
-      <Filter>installer</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="images\relax-48.png">
@@ -125,5 +122,10 @@
     <ResourceCompile Include="worktimer.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Installer\worktimer_installer.nsi">
+      <Filter>installer</Filter>
+    </None>
   </ItemGroup>
 </Project>
