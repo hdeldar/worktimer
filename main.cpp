@@ -4,14 +4,14 @@
 
 int main(int argc, char *argv[])
 {
-    Q_INIT_RESOURCE(systray);
+    Q_INIT_RESOURCE(worktimer);
 
     QApplication app(argc, argv);
-    QCoreApplication::setOrganizationName("CRCIS");
-    QCoreApplication::setOrganizationDomain("CRCIS.noornet.net");
-    QCoreApplication::setApplicationName("ConnectToInternet");
+    QCoreApplication::setOrganizationName("HD");
+    QCoreApplication::setOrganizationDomain("HD");
+    QCoreApplication::setApplicationName("WorkTimer");
     if (!QSystemTrayIcon::isSystemTrayAvailable()) {
-        QMessageBox::critical(0, QObject::tr("Internet Connection"),
+        QMessageBox::critical(0, QObject::tr("WorkTimer"),
                               QObject::tr("I couldn't detect any system tray "
                                           "on this system."));
         return 1;
