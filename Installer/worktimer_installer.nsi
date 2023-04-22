@@ -75,7 +75,14 @@ Section
 	#---
 	
 SectionEnd
- 
+
+Section "Visual Studio Runtime"
+  SetOutPath "$INSTDIR"
+  File "vc\vc_redist.x64.exe"
+  ExecWait "$INSTDIR\vc_redist.x64.exe"
+  Delete "$INSTDIR\vc_redist.x64.exe"
+SectionEnd
+
 # uninstaller section start
 Section "uninstall"
  
