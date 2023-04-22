@@ -36,7 +36,7 @@ private:
 	QString getCurrentTask();
 	void working();
 	void resting();
-	void writeLog(QString task, QString start, QString stop, QString duration);
+	void writeLog(QString task, QString start, QString stop, QString duration, quint64 elapsed);
 
 private:
     QAction *m_minimizeAction;

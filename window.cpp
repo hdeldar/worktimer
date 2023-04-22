@@ -73,7 +73,7 @@ Window::Window(QWidget *parent)
 
 Window::~Window()
 {
-
+	resting();
 }
 
 void Window::setVisible(bool visible)
@@ -245,15 +245,21 @@ void Window::working()
 
 void Window::resting()
 {
-	QString stopTime = Util::getPersianDate() + " " + QLocale().toString(QTime::currentTime(), "HH:mm:ss");
-	QString duration =  Util::millisecondsToTime(m_elapsedTime.restart());
-	writeLog(m_currentTask, m_startTime, stopTime, duration);
-	m_currentState = 0;
-	setIcon(m_currentState);
-	showMessage();
+	if (!m_currentTask.isEmpty() && !m_startTime.isEmpty())
+	{
+		QString stopTime = Util::getPersianDate() + " " + QLocale().toString(QTime::currentTime(), "HH:mm:ss");
+		quint64 elapsed = m_elapsedTime.restart();
+		QString duration = Util::millisecondsToTime(elapsed);
+		writeLog(m_currentTask, m_startTime, stopTime, duration, elapsed);
+		m_currentState = 0;
+		setIcon(m_currentState);
+		showMessage();
+	}
+	m_currentTask.clear();
+	m_startTime.clear();
 }
 
-void Window::writeLog(QString task, QString start, QString stop, QString duration)
+void Window::writeLog(QString task, QString start, QString stop, QString duration, quint64 elapsed)
 {
 	QString fileName = m_logFileDir + "/" + Util::getPersianDate("ym") + ".csv";
 	if (m_logFileName != fileName)
@@ -277,7 +283,7 @@ void Window::writeLog(QString task, QString start, QString stop, QString duratio
 	}
 	if (m_logFile->isOpen())
 	{
-		m_logFile->write(QString("%1,%2,%3,%4\r\n").arg(task).arg(start).arg(stop).arg(duration).toUtf8());
+		m_logFile->write(QString("%1,%2,%3,%4,%5\r\n").arg(task).arg(start).arg(stop).arg(duration).arg(elapsed).toUtf8());
 		m_logFile->flush();
 		m_logFile->close();
 	}

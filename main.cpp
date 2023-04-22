@@ -4,6 +4,13 @@
 #include <QDebug>
 #include <QScreen>
 #include <QDesktopWidget>
+#include <Windows.h>
+
+LONG WINAPI TopLevelExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
+{
+	return EXCEPTION_CONTINUE_SEARCH;
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -25,6 +32,7 @@ int main(int argc, char *argv[])
 	QRect screenrect = QApplication::primaryScreen()->availableGeometry();
 	window.move(screenrect.right() - window.width(), screenrect.bottom() - window.height() - 40);
     window.show();
+	::SetUnhandledExceptionFilter(TopLevelExceptionHandler);
     return app.exec();
 }
 // 
