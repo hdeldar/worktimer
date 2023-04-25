@@ -8,6 +8,7 @@
 
 LONG WINAPI TopLevelExceptionHandler(PEXCEPTION_POINTERS pExceptionInfo)
 {
+	Q_UNUSED(pExceptionInfo)
 	return EXCEPTION_CONTINUE_SEARCH;
 }
 

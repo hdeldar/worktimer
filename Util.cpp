@@ -1,5 +1,7 @@
 #include "Util.h"
 #include <QDate>
+#include <QFile>
+#include <QMap>
 
 Util::Util(QObject *parent)
 	: QObject(parent)
@@ -162,7 +164,12 @@ QString Util::getPersianDate(QString format)
 QString Util::millisecondsToTime(quint64 milliseconds)
 {
 	quint64 seconds = milliseconds / 1000;
-	milliseconds = milliseconds % 1000;
+	//milliseconds = milliseconds % 1000;
+	return secondsToTime(seconds);
+}
+
+QString Util::secondsToTime(quint64 seconds)
+{
 	quint64 minutes = seconds / 60;
 	seconds = seconds % 60;
 	quint64 hours = minutes / 60;
@@ -170,4 +177,26 @@ QString Util::millisecondsToTime(quint64 milliseconds)
 	//quint64 day = hours / 24;
 	//day = day % 24;
 	return QString("%1:%2:%3").arg(hours).arg(minutes).arg(seconds);
+}
+
+QMap<QString, quint64> Util::calculateTaskTotalTime(QString filePath)
+{
+	QMap<QString, quint64> mtt;
+	QFile file(filePath);
+	if (file.open(QIODevice::ReadOnly))
+	{
+		while (!file.atEnd()) {
+			QString line = file.readLine();
+			QStringList sl = line.split(",");
+			if (sl.length() == 5)
+			{
+				if (mtt.contains(sl.at(0)))
+					mtt[sl.at(0)] += sl.at(4).toULongLong();
+				else
+					mtt[sl.at(0)] = sl.at(4).toULongLong();
+			}
+		}
+	}
+
+	return mtt;
 }

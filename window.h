@@ -2,6 +2,7 @@
 
 #include <QSystemTrayIcon>
 #include <QTime>
+#include <QTimer>
 #include <QDialog>
 #include <memory>
 #include <QElapsedTimer>
@@ -37,6 +38,10 @@ private:
 	void working();
 	void resting();
 	void writeLog(QString task, QString start, QString stop, QString duration, quint64 elapsed);
+	void showDate();
+	void showDuration();
+	QString getLogFilePathName();
+	void updateTasksTotalTime();
 
 private:
     QAction *m_minimizeAction;
@@ -60,5 +65,8 @@ private:
 	QString m_logFileDir;
 	QString m_logFileName;
 	QFile* m_logFile = nullptr;
+	QTimer m_timer;
+	//--
+	QMap<QString, quint64> m_tasksTotalTime;
 };
 

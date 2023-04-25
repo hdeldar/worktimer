@@ -69,6 +69,15 @@ Window::Window(QWidget *parent)
 	}
 	m_ui->taskListWidget->setCurrentRow(crow);
 	setIcon(0);
+
+	showDate();
+
+	m_ui->durLabel->setText(Util::millisecondsToTime(0));
+	m_timer.setInterval(1000);
+	connect(&m_timer, &QTimer::timeout, this, &Window::showDuration);
+	//---
+	m_tasksTotalTime = Util::calculateTaskTotalTime(getLogFilePathName());
+	updateTasksTotalTime();
 }
 
 Window::~Window()
@@ -107,6 +116,7 @@ void Window::closeEvent(QCloseEvent *event)
 			settings.setValue("FirstTime", false);
 		}
         hide();
+		//rejected();
         event->ignore();
     }
 }
@@ -135,10 +145,16 @@ void Window::iconActivated(QSystemTrayIcon::ActivationReason reason)
     case QSystemTrayIcon::Trigger:
     case QSystemTrayIcon::DoubleClick:
 	 {
-		if (m_currentState == 0)
-			working();
-		else
-			resting();
+		QRect screenrect = QApplication::primaryScreen()->availableGeometry();
+		move(screenrect.right() - width(), screenrect.bottom() - height() - 40);
+		showNormal();
+// 		if (res == QDialog::Accepted) 
+// 		{
+// 			if (m_currentState == 0)
+// 				working();
+// 			else
+// 				resting();
+// 		}
 
 	 }
         break;
@@ -175,7 +191,12 @@ void Window::on_removeTask_clicked(bool checked)
 void Window::on_okBtn_clicked(bool checked)
 {
 	Q_UNUSED(checked)
-	hide();
+	//hide();
+	//accept();
+	if (m_currentState == 0)
+		working();
+	else
+		resting();
 }
 
 void Window::on_pathBtn_clicked(bool checked)
@@ -233,14 +254,17 @@ void Window::createTrayIcon()
 
 void Window::working()
 {
-	QRect screenrect = QApplication::primaryScreen()->availableGeometry();
-	move(screenrect.right() - width(), screenrect.bottom() - height() - 40);
-	exec();
+// 	QRect screenrect = QApplication::primaryScreen()->availableGeometry();
+// 	move(screenrect.right() - width(), screenrect.bottom() - height() - 40);
+// 	int res = exec();
+// 	if (res == QDialog::Rejected) return;
 	m_currentTask = getCurrentTask();
 	m_elapsedTime.restart();
 	m_startTime = Util::getPersianDate() + " " + QLocale().toString(QTime::currentTime(), "HH:mm:ss");
 	m_currentState = 1;
+	m_ui->okBtn->setText("Stop");
 	setIcon(m_currentState);
+	m_timer.start();
 }
 
 void Window::resting()
@@ -250,18 +274,38 @@ void Window::resting()
 		QString stopTime = Util::getPersianDate() + " " + QLocale().toString(QTime::currentTime(), "HH:mm:ss");
 		quint64 elapsed = m_elapsedTime.restart();
 		QString duration = Util::millisecondsToTime(elapsed);
-		writeLog(m_currentTask, m_startTime, stopTime, duration, elapsed);
+		//writeLog(m_currentTask, m_startTime, stopTime, duration, elapsed/1000);
 		m_currentState = 0;
+		m_ui->okBtn->setText("Start");
 		setIcon(m_currentState);
 		showMessage();
+		m_timer.stop();
+		m_ui->durLabel->setText(Util::millisecondsToTime(0));
+		
+		elapsed = elapsed / 1000;;
+		if (m_tasksTotalTime.contains(m_currentTask))
+			m_tasksTotalTime[m_currentTask] += elapsed;
+		else
+			m_tasksTotalTime[m_currentTask] = elapsed;
+		updateTasksTotalTime();
 	}
 	m_currentTask.clear();
 	m_startTime.clear();
+	showDate();
+}
+
+QString Window::getLogFilePathName()
+{
+	return m_logFileDir + "/" + Util::getPersianDate("ym") + ".csv";
+}
+
+void Window::updateTasksTotalTime()
+{
 }
 
 void Window::writeLog(QString task, QString start, QString stop, QString duration, quint64 elapsed)
 {
-	QString fileName = m_logFileDir + "/" + Util::getPersianDate("ym") + ".csv";
+	QString fileName = getLogFilePathName();
 	if (m_logFileName != fileName)
 	{
 		if (m_logFile)
@@ -287,4 +331,14 @@ void Window::writeLog(QString task, QString start, QString stop, QString duratio
 		m_logFile->flush();
 		m_logFile->close();
 	}
+}
+
+void Window::showDate()
+{
+	m_ui->dateLabel->setText(Util::getPersianDate());
+}
+
+void Window::showDuration()
+{
+	m_ui->durLabel->setText(Util::millisecondsToTime(m_elapsedTime.elapsed()));
 }
