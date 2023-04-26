@@ -1,5 +1,4 @@
 #include "Util.h"
-#include <QDate>
 #include <QFile>
 #include <QMap>
 
@@ -12,11 +11,11 @@ Util::~Util()
 {
 }
 
-QString Util::getPersianDate(QString format)
+QString Util::getPersianDate(QString format, QDate today)
 {
 	QList<QString> week = { "يكشنبه", "دوشنبه", "سه شنبه", "چهارشنبه", "پنج شنبه", "جمعه", "شنبه" };
 	QList<QString> months = { "فروردين", "ارديبهشت", "خرداد", "تير", "مرداد", "شهريور", "مهر", "آبان", "آذر", "دي", "بهمن", "اسفند" };
-	QDate today = QDate::currentDate();
+	//QDate today = QDate::currentDate();
 	int d = today.dayOfWeek();
 	int day = today.day();
 	int month = today.month();
@@ -156,8 +155,12 @@ QString Util::getPersianDate(QString format)
 		return QString("%1/%2/%3").arg(year).arg(month).arg(day);
 	if (format == "ym")
 		return QString("%1%2").arg(year).arg(month,2,10,QChar('0'));
+	if (format == "y/m")
+		return QString("%1/%2").arg(year).arg(month, 2, 10, QChar('0'));
 	if (format == "d/m/y") 
-		return QString("%1/%2/%3").arg(day).arg(month).arg(year);	
+		return QString("%1/%2/%3").arg(day).arg(month).arg(year);
+	if (month < 1 || month > 12)month = 1;
+	if (d < 0 || d > 6)d = 0;
 	return QString("%1 %2 %3 %4").arg(week[d]).arg(day).arg(months[month - 1]).arg(year);
 }
 

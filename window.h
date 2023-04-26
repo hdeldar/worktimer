@@ -29,8 +29,10 @@ private slots:
 	void on_addTask_clicked(bool checked);
 	void on_removeTask_clicked(bool checked);
 	void on_okBtn_clicked(bool checked);
+	void on_pmBtn_clicked(bool checked);
+	void on_nmBtn_clicked(bool checked);
 	void on_pathBtn_clicked(bool checked);
-	void on_taskListWidget_currentRowChanged(int currentRow);
+	void on_taskTableWidget_currentItemChanged(QTableWidgetItem *current, QTableWidgetItem *previous);
 private:
     void createActions();
     void createTrayIcon();
@@ -42,6 +44,7 @@ private:
 	void showDuration();
 	QString getLogFilePathName();
 	void updateTasksTotalTime();
+	void updateTaskTable();
 
 private:
     QAction *m_minimizeAction;
@@ -68,5 +71,6 @@ private:
 	QTimer m_timer;
 	//--
 	QMap<QString, quint64> m_tasksTotalTime;
+	QDate m_currentDate;
 };
 

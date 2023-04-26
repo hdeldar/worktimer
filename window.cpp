@@ -22,7 +22,7 @@
 #include <QSettings>
 #include "ui_window.h"
 #include "Util.h"
-#include <QListWidget>
+#include <QTableWidget>
 #include <QApplication>
 #include <QScreen>
 
@@ -58,16 +58,7 @@ Window::Window(QWidget *parent)
 	setWindowTitle(tr("Work Timer"));
   
 	//---
-	
-	QStringList items = settings.value("TasksList").toStringList();
-	int crow = settings.value("CurrentRow", 0).toInt();
-	for (int i = 0; i < items.length(); ++i)
-	{
-		QListWidgetItem *item = new QListWidgetItem(items.at(i));
-		item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled);
-		m_ui->taskListWidget->addItem(item);
-	}
-	m_ui->taskListWidget->setCurrentRow(crow);
+	updateTaskTable();
 	setIcon(0);
 
 	showDate();
@@ -76,13 +67,37 @@ Window::Window(QWidget *parent)
 	m_timer.setInterval(1000);
 	connect(&m_timer, &QTimer::timeout, this, &Window::showDuration);
 	//---
-	m_tasksTotalTime = Util::calculateTaskTotalTime(getLogFilePathName());
-	updateTasksTotalTime();
+	
 }
 
 Window::~Window()
 {
 	resting();
+}
+
+void Window::updateTaskTable()
+{
+	QSettings settings;
+	m_tasksTotalTime = Util::calculateTaskTotalTime(getLogFilePathName());
+	QStringList items = settings.value("TasksList").toStringList();
+	int crow = settings.value("CurrentRow", 0).toInt();
+	m_ui->taskTableWidget->setStyleSheet("QHeaderView::section { background-color:#abc }");
+	m_ui->taskTableWidget->setRowCount(items.length());
+	m_ui->taskTableWidget->setColumnCount(2);
+	m_ui->taskTableWidget->setHorizontalHeaderLabels({ "Tasks","Total time" });
+	m_ui->taskTableWidget->setColumnWidth(0, 120);
+	m_ui->taskTableWidget->setColumnWidth(1, 80);
+	for (int i = 0; i < items.length(); ++i)
+	{
+		QTableWidgetItem *item = new QTableWidgetItem(items.at(i));
+		item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled);
+		m_ui->taskTableWidget->setItem(i, 0, item);
+
+		item = new QTableWidgetItem(Util::secondsToTime(m_tasksTotalTime.value(items.at(i), 0)));
+		item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+		m_ui->taskTableWidget->setItem(i, 1, item);
+	}
+	m_ui->taskTableWidget->setCurrentCell(crow, 0);
 }
 
 void Window::setVisible(bool visible)
@@ -95,15 +110,19 @@ void Window::setVisible(bool visible)
 
 void Window::closeEvent(QCloseEvent *event)
 {
+	int crow = m_ui->taskTableWidget->currentRow();
 	QSettings settings;
+	settings.setValue("CurrentRow", crow);
+
+	showDate();
+	
 	QStringList items;
-	int crow = m_ui->taskListWidget->currentRow();
-	for (int i = 0; i < m_ui->taskListWidget->count(); ++i)
+	for (int i = 0; i < m_ui->taskTableWidget->rowCount(); ++i)
 	{
-		items << m_ui->taskListWidget->item(i)->text();
+		items << m_ui->taskTableWidget->item(i,0)->text();
 	}
 	settings.setValue("TasksList", items);
-	settings.setValue("CurrentRow", crow);
+	
 	bool firstTime = settings.value("FirstTime", true).toBool();
     if (m_trayIcon->isVisible()) {
 		if (firstTime)
@@ -148,6 +167,8 @@ void Window::iconActivated(QSystemTrayIcon::ActivationReason reason)
 		QRect screenrect = QApplication::primaryScreen()->availableGeometry();
 		move(screenrect.right() - width(), screenrect.bottom() - height() - 40);
 		showNormal();
+		activateWindow();
+		raise();
 // 		if (res == QDialog::Accepted) 
 // 		{
 // 			if (m_currentState == 0)
@@ -176,17 +197,31 @@ void Window::showMessage()
 void Window::on_addTask_clicked(bool checked)
 {
 	Q_UNUSED(checked)
-	QListWidgetItem *item = new QListWidgetItem("new task");
+	int row = m_ui->taskTableWidget->rowCount();
+	m_ui->taskTableWidget->insertRow(row);
+	QTableWidgetItem *item = new QTableWidgetItem("new task");
+	item->setText("new task");
 	item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled);
-	m_ui->taskListWidget->addItem(item);
-	m_ui->taskListWidget->setCurrentItem(item);
+	m_ui->taskTableWidget->setItem(row, 0, item);
+
+	item = new QTableWidgetItem("");
+	item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+	m_ui->taskTableWidget->setItem(row, 1, item);
+	m_ui->taskTableWidget->setCurrentCell(row, 0);
+// 	QTableWidgetItem *item = new QTableWidgetItem("new task");
+// 	item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled);
+// 	m_ui->taskTableWidget->setItem(0,0,item);
+// 	m_ui->taskTableWidget->setCurrentItem(item);
 }
 
 void Window::on_removeTask_clicked(bool checked)
 {
 	Q_UNUSED(checked)
-	QListWidgetItem *it = m_ui->taskListWidget->takeItem(m_ui->taskListWidget->currentRow());
+	QTableWidgetItem *it = m_ui->taskTableWidget->takeItem(m_ui->taskTableWidget->currentRow(),0);
 	delete it;
+	it = m_ui->taskTableWidget->takeItem(m_ui->taskTableWidget->currentRow(), 1);
+	delete it;
+	m_ui->taskTableWidget->removeRow(m_ui->taskTableWidget->currentRow());
 }
 void Window::on_okBtn_clicked(bool checked)
 {
@@ -197,6 +232,21 @@ void Window::on_okBtn_clicked(bool checked)
 		working();
 	else
 		resting();
+}
+
+void Window::on_pmBtn_clicked(bool checked)
+{
+	Q_UNUSED(checked)
+	m_currentDate = m_currentDate.addMonths(-1);
+	m_ui->dateLabel->setText(Util::getPersianDate("y/m", m_currentDate));
+	updateTaskTable();
+}
+void Window::on_nmBtn_clicked(bool checked)
+{
+	Q_UNUSED(checked)
+	m_currentDate = m_currentDate.addMonths(1);
+	m_ui->dateLabel->setText(Util::getPersianDate("y/m", m_currentDate));
+	updateTaskTable();
 }
 
 void Window::on_pathBtn_clicked(bool checked)
@@ -211,11 +261,12 @@ void Window::on_pathBtn_clicked(bool checked)
 	m_ui->pathLineEdit->setText(m_logFileDir);
 }
 
-void Window::on_taskListWidget_currentRowChanged(int currentRow)
+void Window::on_taskTableWidget_currentItemChanged(QTableWidgetItem *current, QTableWidgetItem *previous)
 {
-	auto item = m_ui->taskListWidget->item(currentRow);
-	if (item)
-		m_ui->currentTaskLineEdit->setText(item->text());
+	Q_UNUSED(previous)
+	//auto item = m_ui->taskTableWidget->item(currentRow,0);
+	if (current)
+		m_ui->currentTaskLineEdit->setText(current->text());
 }
 
 QString Window::getCurrentTask()
@@ -254,6 +305,9 @@ void Window::createTrayIcon()
 
 void Window::working()
 {
+	showDate();
+	m_ui->pmBtn->setEnabled(false);
+	m_ui->nmBtn->setEnabled(false);
 // 	QRect screenrect = QApplication::primaryScreen()->availableGeometry();
 // 	move(screenrect.right() - width(), screenrect.bottom() - height() - 40);
 // 	int res = exec();
@@ -274,7 +328,7 @@ void Window::resting()
 		QString stopTime = Util::getPersianDate() + " " + QLocale().toString(QTime::currentTime(), "HH:mm:ss");
 		quint64 elapsed = m_elapsedTime.restart();
 		QString duration = Util::millisecondsToTime(elapsed);
-		//writeLog(m_currentTask, m_startTime, stopTime, duration, elapsed/1000);
+		writeLog(m_currentTask, m_startTime, stopTime, duration, elapsed/1000);
 		m_currentState = 0;
 		m_ui->okBtn->setText("Start");
 		setIcon(m_currentState);
@@ -292,11 +346,13 @@ void Window::resting()
 	m_currentTask.clear();
 	m_startTime.clear();
 	showDate();
+	m_ui->pmBtn->setEnabled(true);
+	m_ui->nmBtn->setEnabled(true);
 }
 
 QString Window::getLogFilePathName()
 {
-	return m_logFileDir + "/" + Util::getPersianDate("ym") + ".csv";
+	return m_logFileDir + "/" + Util::getPersianDate("ym", m_currentDate) + ".csv";
 }
 
 void Window::updateTasksTotalTime()
@@ -335,6 +391,8 @@ void Window::writeLog(QString task, QString start, QString stop, QString duratio
 
 void Window::showDate()
 {
+	m_currentDate = QDate::currentDate();
+	updateTaskTable();
 	m_ui->dateLabel->setText(Util::getPersianDate());
 }
 
