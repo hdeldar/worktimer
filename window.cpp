@@ -51,7 +51,7 @@ Window::Window(QWidget *parent)
 	connect(m_trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
 			this, SLOT(iconActivated(QSystemTrayIcon::ActivationReason)));
 
-	m_iconList << QIcon(":/images/relax-96.png") << QIcon(":/images/working-96.png") ;
+	m_iconList << QIcon(":/images/relax-96.png") << QIcon(":/images/working-96.png") << QIcon(":/images/working-96-1.png");
 
 	m_trayIcon->show();
 
@@ -79,21 +79,26 @@ void Window::updateTaskTable()
 {
 	QSettings settings;
 	m_tasksTotalTime = Util::calculateTaskTotalTime(getLogFilePathName());
-	QStringList items = settings.value("TasksList").toStringList();
+	QList<QString> keys = m_tasksTotalTime.keys();
+	QSet<QString> items = settings.value("TasksList").toStringList().toSet();
+	items.unite(keys.toSet());
+	keys = items.toList();
+	keys.sort();
 	int crow = settings.value("CurrentRow", 0).toInt();
 	m_ui->taskTableWidget->setStyleSheet("QHeaderView::section { background-color:#abc }");
-	m_ui->taskTableWidget->setRowCount(items.length());
+	m_ui->taskTableWidget->setRowCount(items.size());
 	m_ui->taskTableWidget->setColumnCount(2);
 	m_ui->taskTableWidget->setHorizontalHeaderLabels({ "Tasks","Total time" });
 	m_ui->taskTableWidget->setColumnWidth(0, 120);
 	m_ui->taskTableWidget->setColumnWidth(1, 80);
-	for (int i = 0; i < items.length(); ++i)
+	
+	for (int i = 0; i < keys.size(); ++i)
 	{
-		QTableWidgetItem *item = new QTableWidgetItem(items.at(i));
+		QTableWidgetItem *item = new QTableWidgetItem(keys.at(i));
 		item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled);
 		m_ui->taskTableWidget->setItem(i, 0, item);
 
-		item = new QTableWidgetItem(Util::secondsToTime(m_tasksTotalTime.value(items.at(i), 0)));
+		item = new QTableWidgetItem(Util::secondsToTime(m_tasksTotalTime.value(keys.at(i), 0)));
 		item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 		m_ui->taskTableWidget->setItem(i, 1, item);
 	}
@@ -399,4 +404,18 @@ void Window::showDate()
 void Window::showDuration()
 {
 	m_ui->durLabel->setText(Util::millisecondsToTime(m_elapsedTime.elapsed()));
+	QIcon icon;
+	if (m_workingIcon == 0)
+	{
+		icon = m_iconList.at(1);
+		m_trayIcon->setIcon(icon);
+	}
+	else if (m_workingIcon == 4)
+	{
+		icon = m_iconList.at(2);
+		m_trayIcon->setIcon(icon);
+	}
+	m_workingIcon++;
+	if (m_workingIcon > 8)
+		m_workingIcon = 0;
 }
