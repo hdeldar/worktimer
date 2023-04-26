@@ -272,6 +272,9 @@ void Window::on_taskTableWidget_currentItemChanged(QTableWidgetItem *current, QT
 	//auto item = m_ui->taskTableWidget->item(currentRow,0);
 	if (current)
 		m_ui->currentTaskLineEdit->setText(current->text());
+	int crow = m_ui->taskTableWidget->currentRow();
+	QSettings settings;
+	settings.setValue("CurrentRow", crow);
 }
 
 QString Window::getCurrentTask()
