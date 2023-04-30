@@ -85,6 +85,7 @@ void Window::updateTaskTable()
 	keys = items.toList();
 	keys.sort();
 	int crow = settings.value("CurrentRow", 0).toInt();
+	m_ui->taskTableWidget->blockSignals(true);
 	m_ui->taskTableWidget->setStyleSheet("QHeaderView::section { background-color:#abc }");
 	m_ui->taskTableWidget->setRowCount(items.size());
 	m_ui->taskTableWidget->setColumnCount(2);
@@ -102,6 +103,7 @@ void Window::updateTaskTable()
 		item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 		m_ui->taskTableWidget->setItem(i, 1, item);
 	}
+	m_ui->taskTableWidget->blockSignals(false);
 	m_ui->taskTableWidget->setCurrentCell(crow, 0);
 }
 
@@ -227,6 +229,7 @@ void Window::on_removeTask_clicked(bool checked)
 	it = m_ui->taskTableWidget->takeItem(m_ui->taskTableWidget->currentRow(), 1);
 	delete it;
 	m_ui->taskTableWidget->removeRow(m_ui->taskTableWidget->currentRow());
+	saveTableItms();
 }
 void Window::on_okBtn_clicked(bool checked)
 {
@@ -275,6 +278,15 @@ void Window::on_taskTableWidget_currentItemChanged(QTableWidgetItem *current, QT
 	int crow = m_ui->taskTableWidget->currentRow();
 	QSettings settings;
 	settings.setValue("CurrentRow", crow);
+}
+
+void Window::on_taskTableWidget_itemChanged(QTableWidgetItem *it)
+{
+	int crow = m_ui->taskTableWidget->currentRow();
+	if(it->row() == crow)
+		m_ui->currentTaskLineEdit->setText(it->text());
+	saveTableItms();
+
 }
 
 QString Window::getCurrentTask()
@@ -349,7 +361,7 @@ void Window::resting()
 			m_tasksTotalTime[m_currentTask] += elapsed;
 		else
 			m_tasksTotalTime[m_currentTask] = elapsed;
-		updateTasksTotalTime();
+	
 	}
 	m_currentTask.clear();
 	m_startTime.clear();
@@ -363,8 +375,18 @@ QString Window::getLogFilePathName()
 	return m_logFileDir + "/" + Util::getPersianDate("ym", m_currentDate) + ".csv";
 }
 
-void Window::updateTasksTotalTime()
+void Window::saveTableItms()
 {
+	int crow = m_ui->taskTableWidget->currentRow();
+	QSettings settings;
+	settings.setValue("CurrentRow", crow);
+
+	QStringList items;
+	for (int i = 0; i < m_ui->taskTableWidget->rowCount(); ++i)
+	{
+		items << m_ui->taskTableWidget->item(i, 0)->text();
+	}
+	settings.setValue("TasksList", items);
 }
 
 void Window::writeLog(QString task, QString start, QString stop, QString duration, quint64 elapsed)

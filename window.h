@@ -33,6 +33,7 @@ private slots:
 	void on_nmBtn_clicked(bool checked);
 	void on_pathBtn_clicked(bool checked);
 	void on_taskTableWidget_currentItemChanged(QTableWidgetItem *current, QTableWidgetItem *previous);
+	void on_taskTableWidget_itemChanged(QTableWidgetItem *item);
 private:
     void createActions();
     void createTrayIcon();
@@ -43,7 +44,7 @@ private:
 	void showDate();
 	void showDuration();
 	QString getLogFilePathName();
-	void updateTasksTotalTime();
+	void saveTableItms();
 	void updateTaskTable();
 
 private:
