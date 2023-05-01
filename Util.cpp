@@ -1,6 +1,7 @@
 #include "Util.h"
 #include <QFile>
 #include <QMap>
+#include <QLocale>
 
 Util::Util(QObject *parent)
 	: QObject(parent)
@@ -200,6 +201,42 @@ QMap<QString, quint64> Util::calculateTaskTotalTime(QString filePath)
 			}
 		}
 	}
-
+	else
+	{
+		auto e = file.errorString();
+	}
 	return mtt;
+}
+
+
+void Util::removeTaskFromFile(QString task, QString filePath)
+{
+	QFile::copy(filePath, filePath + QString("_%1.backup")
+		.arg(QLocale().toString(QDateTime::currentDateTime(), "yyyy-MM-dd_HH-mm-ss")));
+	QFile file(filePath);
+	if (file.open(QIODevice::ReadWrite))
+	{
+		QStringList remaindLines;
+		int readLinesCount = 0;
+		while (!file.atEnd()) {
+			readLinesCount++;
+			QString line = file.readLine();
+			QStringList sl = line.split(",");
+			if (sl.length() == 5)
+			{
+				if (sl.at(0) != task)
+					remaindLines << line;
+			}
+		}
+		if (remaindLines.length() < readLinesCount)
+		{
+			file.resize(0);
+			for (auto l : remaindLines)
+			{
+				file.write(l.toUtf8());
+			}
+			file.flush();
+			file.close();
+		}
+	}
 }

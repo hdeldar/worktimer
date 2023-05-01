@@ -74,5 +74,6 @@ private:
 	QMap<QString, quint64> m_tasksTotalTime;
 	QDate m_currentDate;
 	int m_workingIcon = 0;
+	quint64 m_totalTime = 0;
 };
 

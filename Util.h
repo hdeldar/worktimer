@@ -14,4 +14,5 @@ public:
 	static QString millisecondsToTime(quint64 milliseconds);
 	static QString secondsToTime(quint64 seconds);
 	static QMap<QString, quint64> calculateTaskTotalTime(QString filePath);
+	static void removeTaskFromFile(QString task, QString filePath);
 };

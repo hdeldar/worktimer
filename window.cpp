@@ -33,6 +33,7 @@ Window::Window(QWidget *parent)
    , m_ui(new Ui::Window)
 {
 	m_ui->setupUi(this);
+	m_currentDate = QDate::currentDate();
 	QSettings settings;
 	m_logFileDir = settings.value("LogFileDir", "").toString();
 	if (m_logFileDir.isEmpty())
@@ -58,7 +59,7 @@ Window::Window(QWidget *parent)
 	setWindowTitle(tr("Work Timer"));
   
 	//---
-	updateTaskTable();
+	//updateTaskTable();
 	setIcon(0);
 
 	showDate();
@@ -86,13 +87,13 @@ void Window::updateTaskTable()
 	keys.sort();
 	int crow = settings.value("CurrentRow", 0).toInt();
 	m_ui->taskTableWidget->blockSignals(true);
-	m_ui->taskTableWidget->setStyleSheet("QHeaderView::section { background-color:#abc }");
+	m_ui->taskTableWidget->setStyleSheet("QHeaderView::section { background-color:#abc }QTableWidget { selection-background-color:#a50}");
 	m_ui->taskTableWidget->setRowCount(items.size());
 	m_ui->taskTableWidget->setColumnCount(2);
 	m_ui->taskTableWidget->setHorizontalHeaderLabels({ "Tasks","Total time" });
 	m_ui->taskTableWidget->setColumnWidth(0, 120);
 	m_ui->taskTableWidget->setColumnWidth(1, 80);
-	
+	m_totalTime = 0;
 	for (int i = 0; i < keys.size(); ++i)
 	{
 		QTableWidgetItem *item = new QTableWidgetItem(keys.at(i));
@@ -102,9 +103,11 @@ void Window::updateTaskTable()
 		item = new QTableWidgetItem(Util::secondsToTime(m_tasksTotalTime.value(keys.at(i), 0)));
 		item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 		m_ui->taskTableWidget->setItem(i, 1, item);
+		m_totalTime += m_tasksTotalTime.value(keys.at(i), 0);
 	}
 	m_ui->taskTableWidget->blockSignals(false);
 	m_ui->taskTableWidget->setCurrentCell(crow, 0);
+	m_ui->totalLabel->setText(Util::secondsToTime(m_totalTime));
 }
 
 void Window::setVisible(bool visible)
@@ -224,6 +227,11 @@ void Window::on_addTask_clicked(bool checked)
 void Window::on_removeTask_clicked(bool checked)
 {
 	Q_UNUSED(checked)
+	auto res = QMessageBox::question(this, tr("Work Timer"),
+			tr("Are you sure to remove current task?"), QMessageBox::No | QMessageBox::Yes);
+	if (res == QMessageBox::No) 
+		return;
+	Util::removeTaskFromFile(m_currentTask, getLogFilePathName());
 	QTableWidgetItem *it = m_ui->taskTableWidget->takeItem(m_ui->taskTableWidget->currentRow(),0);
 	delete it;
 	it = m_ui->taskTableWidget->takeItem(m_ui->taskTableWidget->currentRow(), 1);
@@ -274,7 +282,10 @@ void Window::on_taskTableWidget_currentItemChanged(QTableWidgetItem *current, QT
 	Q_UNUSED(previous)
 	//auto item = m_ui->taskTableWidget->item(currentRow,0);
 	if (current)
+	{
 		m_ui->currentTaskLineEdit->setText(current->text());
+		m_currentTask = current->text();
+	}
 	int crow = m_ui->taskTableWidget->currentRow();
 	QSettings settings;
 	settings.setValue("CurrentRow", crow);
@@ -283,8 +294,11 @@ void Window::on_taskTableWidget_currentItemChanged(QTableWidgetItem *current, QT
 void Window::on_taskTableWidget_itemChanged(QTableWidgetItem *it)
 {
 	int crow = m_ui->taskTableWidget->currentRow();
-	if(it->row() == crow)
+	if (it->row() == crow)
+	{
 		m_ui->currentTaskLineEdit->setText(it->text());
+		m_currentTask = it->text();
+	}
 	saveTableItms();
 
 }
@@ -363,7 +377,7 @@ void Window::resting()
 			m_tasksTotalTime[m_currentTask] = elapsed;
 	
 	}
-	m_currentTask.clear();
+	//m_currentTask.clear();
 	m_startTime.clear();
 	showDate();
 	m_ui->pmBtn->setEnabled(true);
