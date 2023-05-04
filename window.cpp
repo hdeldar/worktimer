@@ -81,14 +81,15 @@ void Window::updateTaskTable()
 	QSettings settings;
 	m_tasksTotalTime = Util::calculateTaskTotalTime(getLogFilePathName());
 	QList<QString> keys = m_tasksTotalTime.keys();
-	QSet<QString> items = settings.value("TasksList").toStringList().toSet();
-	items.unite(keys.toSet());
-	keys = items.toList();
+	//QSet<QString> items = settings.value("TasksList").toStringList().toSet();
+	//items.unite(keys.toSet());
+	//keys = items.toList();
 	keys.sort();
 	int crow = settings.value("CurrentRow", 0).toInt();
 	m_ui->taskTableWidget->blockSignals(true);
+	m_ui->taskTableWidget->clear();
 	m_ui->taskTableWidget->setStyleSheet("QHeaderView::section { background-color:#abc }QTableWidget { selection-background-color:#a50}");
-	m_ui->taskTableWidget->setRowCount(items.size());
+	m_ui->taskTableWidget->setRowCount(keys.size());
 	m_ui->taskTableWidget->setColumnCount(2);
 	m_ui->taskTableWidget->setHorizontalHeaderLabels({ "Tasks","Total time" });
 	m_ui->taskTableWidget->setColumnWidth(0, 120);
@@ -125,13 +126,10 @@ void Window::closeEvent(QCloseEvent *event)
 	settings.setValue("CurrentRow", crow);
 
 	showDate();
+	saveTableItms();
 	
-	QStringList items;
-	for (int i = 0; i < m_ui->taskTableWidget->rowCount(); ++i)
-	{
-		items << m_ui->taskTableWidget->item(i,0)->text();
-	}
-	settings.setValue("TasksList", items);
+	//settings.setValue("TasksList", items);
+
 	
 	bool firstTime = settings.value("FirstTime", true).toBool();
     if (m_trayIcon->isVisible()) {
@@ -196,18 +194,19 @@ void Window::iconActivated(QSystemTrayIcon::ActivationReason reason)
         ;
     }
 }
-void Window::showMessage()
+void Window::showMessage(const QString& message)
 {
    QSystemTrayIcon::MessageIcon icon = QSystemTrayIcon::MessageIcon(QSystemTrayIcon::Information);
             
    m_trayIcon->showMessage(tr("Working Timer"),
-       tr("Your working time is write on log file."), icon, 100);
+       message, icon, 100);
 }
 
 void Window::on_addTask_clicked(bool checked)
 {
 	Q_UNUSED(checked)
 	int row = m_ui->taskTableWidget->rowCount();
+	m_ui->taskTableWidget->blockSignals(true);
 	m_ui->taskTableWidget->insertRow(row);
 	QTableWidgetItem *item = new QTableWidgetItem("new task");
 	item->setText("new task");
@@ -217,6 +216,7 @@ void Window::on_addTask_clicked(bool checked)
 	item = new QTableWidgetItem("");
 	item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 	m_ui->taskTableWidget->setItem(row, 1, item);
+	m_ui->taskTableWidget->blockSignals(false);
 	m_ui->taskTableWidget->setCurrentCell(row, 0);
 // 	QTableWidgetItem *item = new QTableWidgetItem("new task");
 // 	item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled);
@@ -275,6 +275,7 @@ void Window::on_pathBtn_clicked(bool checked)
 			| QFileDialog::DontResolveSymlinks);
 	settings.setValue("LogFileDir", m_logFileDir);
 	m_ui->pathLineEdit->setText(m_logFileDir);
+	updateTaskTable();
 }
 
 void Window::on_taskTableWidget_currentItemChanged(QTableWidgetItem *current, QTableWidgetItem *previous)
@@ -339,20 +340,41 @@ void Window::createTrayIcon()
 
 void Window::working()
 {
-	showDate();
+	m_currentTask = getCurrentTask();
+	if (m_currentTask.isEmpty())
+	{
+		m_ui->taskTableWidget->setCurrentCell(0, 0);
+	}
+	showDate(); 
+	m_currentTask = getCurrentTask();
+	if (m_currentTask.isEmpty())
+	{
+		showMessage(tr("Please add task to start timer."));
+		return;
+	}
 	m_ui->pmBtn->setEnabled(false);
 	m_ui->nmBtn->setEnabled(false);
+	m_ui->addTask->setEnabled(false);
+	m_ui->removeTask->setEnabled(false);
+	m_ui->pathBtn->setEnabled(false);
+	m_ui->taskTableWidget->setEnabled(false);
 // 	QRect screenrect = QApplication::primaryScreen()->availableGeometry();
 // 	move(screenrect.right() - width(), screenrect.bottom() - height() - 40);
 // 	int res = exec();
 // 	if (res == QDialog::Rejected) return;
-	m_currentTask = getCurrentTask();
+	
 	m_elapsedTime.restart();
 	m_startTime = Util::getPersianDate() + " " + QLocale().toString(QTime::currentTime(), "HH:mm:ss");
 	m_currentState = 1;
 	m_ui->okBtn->setText("Stop");
 	setIcon(m_currentState);
 	m_timer.start();
+	if (!m_tasksTotalTime.contains(m_currentTask))
+	{
+		QString stopTime = Util::getPersianDate() + " " + QLocale().toString(QTime::currentTime(), "HH:mm:ss");
+		QString duration = Util::millisecondsToTime(0);
+		writeLog(m_currentTask, m_startTime, stopTime, duration, 0);
+	}
 }
 
 void Window::resting()
@@ -366,7 +388,7 @@ void Window::resting()
 		m_currentState = 0;
 		m_ui->okBtn->setText("Start");
 		setIcon(m_currentState);
-		showMessage();
+		showMessage(tr("Your working time is write on log file."));
 		m_timer.stop();
 		m_ui->durLabel->setText(Util::millisecondsToTime(0));
 		
@@ -382,6 +404,10 @@ void Window::resting()
 	showDate();
 	m_ui->pmBtn->setEnabled(true);
 	m_ui->nmBtn->setEnabled(true);
+	m_ui->addTask->setEnabled(true);
+	m_ui->removeTask->setEnabled(true);
+	m_ui->pathBtn->setEnabled(true);
+	m_ui->taskTableWidget->setEnabled(true);
 }
 
 QString Window::getLogFilePathName()
@@ -395,12 +421,24 @@ void Window::saveTableItms()
 	QSettings settings;
 	settings.setValue("CurrentRow", crow);
 
+// 	QStringList items;
+// 	for (int i = 0; i < m_ui->taskTableWidget->rowCount(); ++i)
+// 	{
+// 		items << m_ui->taskTableWidget->item(i, 0)->text();
+// 	}
+// 	settings.setValue("TasksList", items);
+
 	QStringList items;
 	for (int i = 0; i < m_ui->taskTableWidget->rowCount(); ++i)
 	{
-		items << m_ui->taskTableWidget->item(i, 0)->text();
+		QString itemText = m_ui->taskTableWidget->item(i, 0)->text();
+		if (!m_tasksTotalTime.contains(itemText))
+		{
+			QString startStopTime = Util::getPersianDate() + " " + QLocale().toString(QTime::currentTime(), "HH:mm:ss");
+			QString duration = Util::millisecondsToTime(0);
+			writeLog(itemText, startStopTime, startStopTime, duration, 0);
+		}
 	}
-	settings.setValue("TasksList", items);
 }
 
 void Window::writeLog(QString task, QString start, QString stop, QString duration, quint64 elapsed)
@@ -430,6 +468,7 @@ void Window::writeLog(QString task, QString start, QString stop, QString duratio
 		m_logFile->write(QString("%1,%2,%3,%4,%5\r\n").arg(task).arg(start).arg(stop).arg(duration).arg(elapsed).toUtf8());
 		m_logFile->flush();
 		m_logFile->close();
+		QFile::copy(m_logFileName, m_logFileName + ".backup");
 	}
 }
 

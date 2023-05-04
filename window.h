@@ -25,7 +25,7 @@ protected:
 private slots:
     void setIcon(int index);
     void iconActivated(QSystemTrayIcon::ActivationReason reason);
-    void showMessage();
+    void showMessage(const QString& message);
 	void on_addTask_clicked(bool checked);
 	void on_removeTask_clicked(bool checked);
 	void on_okBtn_clicked(bool checked);
