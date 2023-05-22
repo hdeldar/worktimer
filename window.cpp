@@ -80,6 +80,22 @@ void Window::updateTaskTable()
 {
 	QSettings settings;
 	m_tasksTotalTime = Util::calculateTaskTotalTime(getLogFilePathName());
+	if (m_tasksTotalTime.isEmpty())
+	{
+		auto lastMonthDate = m_currentDate.addMonths(-1);
+		QMap<QString, quint64> lastMonthTasksTotalTime = Util::calculateTaskTotalTime(getLogFilePathName(lastMonthDate));
+		if (!lastMonthTasksTotalTime.isEmpty())
+		{
+			for (auto e : lastMonthTasksTotalTime.keys())
+			{
+				lastMonthTasksTotalTime[e] = 0;
+				QString ssTime = Util::getPersianDate() + " " + QLocale().toString(QTime::currentTime(), "HH:mm:ss");
+				QString duration = Util::millisecondsToTime(0);
+				writeLog(e, ssTime, ssTime, duration, 0);
+			}
+			m_tasksTotalTime = lastMonthTasksTotalTime;
+		}
+	}
 	QList<QString> keys = m_tasksTotalTime.keys();
 	//QSet<QString> items = settings.value("TasksList").toStringList().toSet();
 	//items.unite(keys.toSet());
@@ -107,6 +123,7 @@ void Window::updateTaskTable()
 		m_totalTime += m_tasksTotalTime.value(keys.at(i), 0);
 	}
 	m_ui->taskTableWidget->blockSignals(false);
+	m_ui->currentTaskLineEdit->setText("");
 	m_ui->taskTableWidget->setCurrentCell(crow, 0);
 	m_ui->totalLabel->setText(Util::secondsToTime(m_totalTime));
 }
@@ -213,7 +230,7 @@ void Window::on_addTask_clicked(bool checked)
 	item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled);
 	m_ui->taskTableWidget->setItem(row, 0, item);
 
-	item = new QTableWidgetItem("");
+	item = new QTableWidgetItem(Util::secondsToTime(0));
 	item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 	m_ui->taskTableWidget->setItem(row, 1, item);
 	m_ui->taskTableWidget->blockSignals(false);
@@ -388,7 +405,8 @@ void Window::resting()
 		m_currentState = 0;
 		m_ui->okBtn->setText("Start");
 		setIcon(m_currentState);
-		showMessage(tr("Your working time is write on log file."));
+		showMessage(tr("Your working time is %1 for task %2 write on log file.")
+			.arg(duration).arg(m_currentTask));
 		m_timer.stop();
 		m_ui->durLabel->setText(Util::millisecondsToTime(0));
 		
@@ -410,9 +428,11 @@ void Window::resting()
 	m_ui->taskTableWidget->setEnabled(true);
 }
 
-QString Window::getLogFilePathName()
+QString Window::getLogFilePathName(QDate currentDate)
 {
-	return m_logFileDir + "/" + Util::getPersianDate("ym", m_currentDate) + ".csv";
+	if (currentDate.isNull())
+		currentDate = m_currentDate;
+	return m_logFileDir + "/" + Util::getPersianDate("ym", currentDate) + ".csv";
 }
 
 void Window::saveTableItms()
@@ -493,6 +513,7 @@ void Window::showDuration()
 		icon = m_iconList.at(2);
 		m_trayIcon->setIcon(icon);
 	}
+	m_trayIcon->setToolTip(m_ui->durLabel->text());
 	m_workingIcon++;
 	if (m_workingIcon > 8)
 		m_workingIcon = 0;

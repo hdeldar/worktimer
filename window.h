@@ -43,7 +43,7 @@ private:
 	void writeLog(QString task, QString start, QString stop, QString duration, quint64 elapsed);
 	void showDate();
 	void showDuration();
-	QString getLogFilePathName();
+	QString getLogFilePathName(QDate currentDate = QDate());
 	void saveTableItms();
 	void updateTaskTable();
 
