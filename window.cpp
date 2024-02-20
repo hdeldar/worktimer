@@ -270,14 +270,28 @@ void Window::on_okBtn_clicked(bool checked)
 void Window::on_pmBtn_clicked(bool checked)
 {
 	Q_UNUSED(checked)
-	m_currentDate = m_currentDate.addMonths(-1);
+	//m_currentDate = m_currentDate.addMonths(-1);
+	int m = Util::getMonth(m_currentDate);
+	for (int i = 0; i < 4; i++)
+	{
+		m_currentDate = m_currentDate.addDays(-20);
+		if(m != Util::getMonth(m_currentDate))
+			break;
+	}
 	m_ui->dateLabel->setText(Util::getPersianDate("y/m", m_currentDate));
 	updateTaskTable();
 }
 void Window::on_nmBtn_clicked(bool checked)
 {
 	Q_UNUSED(checked)
-	m_currentDate = m_currentDate.addMonths(1);
+	//m_currentDate = m_currentDate.addMonths(1);
+	int m = Util::getMonth(m_currentDate);
+	for (int i = 0; i < 4; i++)
+	{
+		m_currentDate = m_currentDate.addDays(20);
+		if (m != Util::getMonth(m_currentDate))
+			break;
+	}
 	m_ui->dateLabel->setText(Util::getPersianDate("y/m", m_currentDate));
 	updateTaskTable();
 }

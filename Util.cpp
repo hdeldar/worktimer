@@ -165,6 +165,13 @@ QString Util::getPersianDate(QString format, QDate today)
 	return QString("%1 %2 %3 %4").arg(week[d]).arg(day).arg(months[month - 1]).arg(year);
 }
 
+int Util::getMonth(QDate today )
+{
+	auto tt = getPersianDate("y/m", today).split("/");
+	if(tt.length() > 0)
+		return tt.at(1).toInt();
+}
+
 QString Util::millisecondsToTime(quint64 milliseconds)
 {
 	quint64 seconds = milliseconds / 1000;
